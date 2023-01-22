@@ -1,0 +1,17 @@
+body {
+    height: 100%;
+    margin: 0;
+}
+
+/* задаем глобальные параметры */
+body {
+    background: black;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+/* делаем границу вокруг игрового поля */
+canvas {
+    border: 1px solid white;
+}

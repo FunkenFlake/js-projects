@@ -1,0 +1,119 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Rocket in space</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/normalize/5.0.0/normalize.min.css">
+    <style type="text/css">
+        *{
+            /*задаем размеры в разных значениях одновременно, ширина в пикселях, а высота в процентах*/
+            box-sizing: border-box;
+        }
+        html, body {
+            /* убираем границы и отступы */
+            margin: 0;
+            padding: 0;
+            /* разворачиваем космос на всю ширину браузера */
+            width: 100%;
+            height: 100vh;
+            /* не отображаем звезды, которые вылетели за предел окна */
+            overflow: hidden;
+        }
+    </style>
+</head>
+<body>
+    <!-- подключаем библиотеку p5 -->
+    <script src='https://cdnjs.cloudflare.com/ajax/libs/p5.js/0.8.0/p5.min.js'>
+
+    </script>
+
+    <!-- основной скрипт -->
+    <script type="text/javascript">
+        // сколько одновременно звёзд может быть на экране
+        let starsCount = 800;
+
+        // пустой массив со звездами (на старте)
+        let stars = [];
+
+        // класс, на основе которого будут создоваться звезды
+        class Star {
+            // конструктор, который вызывается при создании каждого объекта на основе этого класса
+            constructor() {
+                // случайные координаты новой звезды
+                this.x = random(-width, width);
+                this.y = random(-height, height);
+                // глубина, на сколько близко к экрану появится звезда
+                this.z = random(width);
+            }
+
+            // метод, для обновления координаты звезды
+            update() {
+                // скорость полета
+                let speed = 12;
+                // приближаем звезду к краю экрана, уменьшая глубину на значение скорости
+                this.z -= speed;
+                // если звезда вылетела за экран, делаем из нее новую, меняя координаты
+                if (this.z < 1) {
+                    this.x = random(-width, width);
+                    this.y = random(-height, height);
+                    // для новой звезды глубину задаем прямо
+                    this.z = width;
+                }
+            }
+
+            // метод для отрисовки звезд на экране
+            drawStar() {
+                // каждая звезда - белого цвета
+                fill(255);
+                // и без контура
+                noStroke();
+
+                // с помощью функции map() из p5.js получаем новые координаты для отрисовки звезды
+                let sx = map(this.x / this.z, 0, 1, 0, width);
+                let sy = map(this.y / this.z, 0, 1, 0, height);
+
+                // чем ближе к краю экрана(чем больше глубина) тем больше радиус
+                let r = map(this.z, 0, width, 10, 0);
+
+                // рисуем звезду в новых координатах и с новым размером
+                ellipse(sx, sy, r, r);
+            }
+        }
+
+        // подготавливаем запуск, то что тут написано выполнится автоматически после загрузки страницы
+        function setup() {
+            // создаем холст, на котором будем рисовать
+            createCanvas(innerWidth, innerHeight);
+
+            // размещаем звёзды на холсте
+            for (let i = 0; i < starsCount; i++) {
+                // каждая новая звезда - объект класса Star и умеет всё тоже, что и другие звезды
+                stars[i] = new Star();
+            }
+        }
+
+        // пока не закроем страницу draw() будет выполняться
+        function draw() {
+            // ставим черный фон и указываем скорость обновления фона, чем меньше 2ое значение, тем больший шлейф будет за звездой
+            background(0, 150);
+
+            // формируем центр экрана (куда летим) 
+            translate(width / 2, height / 2);
+
+            // отрисовываем звезды и меняем их положение
+            for (let i = 0; i < starsCount; i++) {
+                stars[i].drawStar();
+                stars[i].update();
+            }
+        }
+
+        // если поменяется размер окна браузера, то сразу меняем размер холста
+        addEventListener('resize', () => {
+            resizeCanvas(innerWidth, innerHeight);
+        })
+    </script>
+    
+</body>
+</html>

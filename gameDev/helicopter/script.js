@@ -1,3 +1,6 @@
+// ставим фокус на браузер
+
+
 const canvas = document.getElementById("game");
 const context = canvas.getContext("2d");
 
@@ -20,6 +23,9 @@ const gravity = 0.35;
 // keep track of the spacebar being pressed so we can move the
 // helicopter up when pressed and down when not pressed
 let spacePressed = false;
+
+// конец игры
+let gameEnded = true;
 
 // clamp a number between min and max values
 function clamp(num, min, max) {
@@ -189,6 +195,8 @@ function loop() {
             context.arc(helicopter.x + helicopter.width / 2, helicopter.y + helicopter.height / 2, helicopter.width, 0, 2 * Math.PI);
             context.stroke();
 
+            gameEnded = true;
+
             cancelAnimationFrame(rAF);
         }
     }
@@ -210,4 +218,12 @@ document.addEventListener("keyup", function(e) {
 });
 
 // start the game
+if (gameEnded) {
+    document.addEventListener("keydown", function(e) {
+        if (e.key == "R" || e.key == "r" || e.key == "К" || e.key == "к") {
+            document.location.reload();
+        }
+    })
+}
+
 rAF = requestAnimationFrame(loop);

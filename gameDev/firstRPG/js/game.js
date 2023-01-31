@@ -47,8 +47,6 @@ var WorldScene = new Phaser.Class({
         var obstacles = map.createStaticLayer("Obstacles", tiles, 0, 0);
         obstacles.setCollisionByExclusion([-1]);                    // устанавливаем определение столкновений со всеми тайлами в этом слое
 
-        // добавляем игрока
-        this.player = this.physics.add.sprite(50, 100, "player", 6);
     }
 
 });

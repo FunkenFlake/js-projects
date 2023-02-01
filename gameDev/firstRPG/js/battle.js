@@ -58,7 +58,6 @@ var BattleScene = new Phaser.Class({
     create: function() {
         // одновременно запускаем сцену UI Scene
         this.scene.launch("UIScene");
-        this.cameras.main.setBackgroundColor("rgba(0, 200, 0, 0.5)");
     }
 });
 

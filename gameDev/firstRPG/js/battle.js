@@ -109,9 +109,14 @@ var BattleScene = new Phaser.Class({
 
         // сохраним индекс активного юнита, если игрок - ждем ввода пользователя, если враг - нападаем.
         this.index = -1;
+
+        // добавим событие времени, которое вызовет сцену через 2 секунды
+        var timeEvent = this.time.addEvent({delay: 2000, callback: this.exitBattle, callbackScope: this});
+
+        this.sys.events.on("wake", this.wake, this);
     },
 
-    // следующий выбор (наверное)
+    // следующий ход (наверное)
     nextTurn: function() {
         this.index++;
 
@@ -133,6 +138,20 @@ var BattleScene = new Phaser.Class({
             this.time.addEvent({ delay: 3000, callback: this.nextTurn, callbackScope: this});
             }
         }
+    },
+
+    // передаем выбор игрока в BattleScene
+    receivePlayerSelection: function(action, target) {
+        if (action == "attack") {
+            this.units[this.index].attack(this.enemies[target]);
+        }
+        this.time.addEvent({delay: 3000, callback: this.nextTurn, callbackScope: this});
+    },
+
+    // выход из сцены битвы
+    exitBattle: function() {
+        this.scene.sleep("UIScene");
+        this.scene.switch("WorldScene");
     },
 });
 
@@ -181,6 +200,22 @@ var UIScene = new Phaser.Class({
 
         // отслеживание нажатия клавиш
         this.input.keyboard.on("keydown", this.onKeyInput, this);
+
+        // прослушиваем событие PlayerSelect
+        this.battleScene.events.on("PlayerSelect", this.onPlayerSelect, this);
+
+        // прослушиваем событие SelectEnemies
+        this.events.on("SelectEnemies", this.onSelectEnemies, this);
+
+        // прослушиваем событие Enemy
+        this.events.on("Enemy", this.onEnemy, this);
+
+        // начинаем первый ход с метода создания UIScene, таким образом подготовив обе сцены перед боем
+        this.battleScene.nextTurn();
+
+        // сообщения
+        this.message = new Message(this, this.battleScene.events);
+        this.add.existing(this.message);
     },
 
     // методы вызова функции меню
@@ -206,6 +241,28 @@ var UIScene = new Phaser.Class({
                 this.currentMenu.confirm();
             }
         }
+    },
+
+    // активируем меню героев и выбираем первого
+    onPlayerSelect: function(id) {
+        this.heroesMenu.select(id);
+        this.actionsMenu.select(0);
+        this.currentMenu = this.actionsMenu;
+    },
+
+    // активируем меню врага и выбираем первого
+    onSelectEnemies: function() {
+        this.currentMenu = this.enemiesMenu;
+        this.enemiesMenu.select(0);
+    },
+
+    // очистит все меню и отправит данные в BattleScene
+    onEnemy: function(index) {
+        this.heroesMenu.deselect();
+        this.actionsMenu.deselect();
+        this.enemiesMenu.deselect();
+        this.currentMenu = null;
+        this.battleScene.receivePlayerSelection("attack", index);
     },
 });
 
@@ -270,7 +327,7 @@ var Menu = new Phaser.Class({
         this.menuItems[this.menuItemIndex].deselect();
         this.menuItemIndex--;
         if (this.menuItemIndex < 0)
-            this.menuItemIndex = this.menuItem.length - 1;
+            this.menuItemIndex = this.menuItems.length - 1;
         this.menuItems[this.menuItemIndex].select();
     },
 
@@ -345,6 +402,7 @@ var ActionsMenu = new Phaser.Class({
     }, 
     confirm: function() {
         // что делать, когда игрок выбирает действие
+        this.scene.events.emit("SelectEnemies");    // после подтверждения вызываем SelectEnemies
     }
 });
 
@@ -360,10 +418,43 @@ var EnemiesMenu = new Phaser.Class({
 
     confirm: function() {
         // do something when player selects an enemy
-    }
+        this.scene.events.emit("Enemy", this.menuItemIndex);
+    },
 });
 
+// класс сообщений
+var Message = new Phaser.Class({
+    Extends: Phaser.GameObjects.Container,
 
+    initialize:
+    function Message(scene, events) {
+        Phaser.GameObjects.Container.call(this, scene, 160, 30);
+        var graphics = this.scene.add.graphics();
+        this.add(graphics);
+        graphics.lineStyle(1, 0xffffff, 0.8);
+        graphics.fillStyle(0x031f4c, 0.3);
+        graphics.strokeRect(-90, -15, 180, 30);
+        graphics.fillRect(-90, -15, 180, 30);
+        this.text = new Phaser.GameObjects.Text(scene, 0, 0, "", {color: "#ffffff", align: "center", fontSize: 13, wordWrap: {width: 160, useAdvancedWrap: true}});
+        this.add(this.text);
+        this.text.setOrigin(0.5);
+        events.on("Message", this.showMessage, this);
+        this.visible = false;
+    },
+
+    showMessage: function(text) {
+        this.text.setText(text);
+        this.visible = true;
+        if (this.hideEvent)
+            this.hideEvent.remove(false);
+        this.hideEvent = this.scene.time.addEvent({delay: 2000, callback: this.hideMessage, callbackScope: this});
+    },
+
+    hideMessage: function() {
+        this.hideEvent = null;
+        this.visible = false;
+    },
+});
 
 
 // запуск

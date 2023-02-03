@@ -16,6 +16,10 @@ var BootScene = new Phaser.Class ({
 
         // наши два персонажа
         this.load.spritesheet("player", "assets/RPG_assets.png", {frameWidth: 16, frameHieght: 16});
+
+        // враги
+        this.load.image("dragonblue", "assets/dragonblue.png");
+        this.load.image("dragonorange", "assets/dragonorrange.png");
     },
 
     create: function() {
